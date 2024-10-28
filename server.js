@@ -13,6 +13,7 @@ import studentRoutes from "./routes/studentRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 import examRoutes from "./routes/examRoutes.js";
 import admissionRoutes from "./routes/addmissionRoutes.js";
+import errorHandler from "./middleware/errorHandlerMiddleware.js";
 
 const app = express(); 
 
@@ -37,6 +38,8 @@ app.use('/exams', examRoutes);
 app.use('/api/admissions', admissionRoutes);
 
 app.use('/api/notifications', notificationRoutes);
+
+app.use(errorHandler);
 
 app.get("/", (req, res) => {
     res.send({

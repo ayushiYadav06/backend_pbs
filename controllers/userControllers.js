@@ -1,203 +1,293 @@
-import users from "../models/UserSchema.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import asyncHandler from 'express-async-handler';
+import Admission from '../models/AddmissionSchema.js';
+import Teacher from '../models/TeacherSchema.js';
+import User from '../models/UserSchema.js'; // Import the User model
+import bcrypt from 'bcryptjs'; // For password hashing
+import nodemailer from 'nodemailer';
 
+// Other existing functions...
 
-// Helper function to generate a random password
-const generatePassword = () => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let password = "";
-  for (let i = 0; i < 8; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
+// @desc    Confirm admission and create user
+// @route   POST /api/admissions/:id/confirm
+// @access  Admin
+export const confirmAdmission = asyncHandler(async (req, res) => {
+  const admission = await Admission.findById(req.params.id);
+
+  if (!admission) {
+    res.status(404);
+    throw new Error('Admission not found');
   }
-  return password;
-};
 
-// Helper function to generate a random mobile number
-const generateMobileNumber = () => {
-  const randomNum = Math.floor(1000000000 + Math.random() * 9000000000);
-  return randomNum.toString();
-};
+  // Check if required fields exist
+  const { name, email, mobileNumber } = admission;
+  if (!name || !email || !mobileNumber) {
+    res.status(400);
+    throw new Error('All fields are required');
+  }
 
- const registerStudent = async (req, res) => {
-  try {
-    const { name, email } = req.body; // Assuming you're sending name and email when confirming
+  // Generate a password
+  const password = Math.random().toString(36).slice(-8); // Simple random password
 
-    // Check if the student already exists by email
-    const existingStudent = await users.findOne({ email });
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    res.status(400);
+    throw new Error('User with this email already exists');
+  }
 
-    if (existingStudent) {
-      return res.status(409).json({ message: "Student already exists", success: false });
+  // Create the user in the User collection
+  const user = await User.create({
+    name,
+    email,
+    mobileNumber,
+    password: bcrypt.hashSync(password, 10), // Hash the password
+    isStudent: true,
+  });
+
+  // Send email with login details
+  const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Admission Confirmation',
+    text: `Dear ${name},\n\nCongratulations! You have been admitted. Your login details are:\nEmail: ${email}\nPassword: ${password}\n\nBest Regards,\nYour Institution`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
     }
+  });
 
-    // Generate mobile number and password
-    const mobileNo = generateMobileNumber();
-    const password = generatePassword();
-    const hashedPassword = await bcrypt.hash(password, 10); // Hash the generated password
+  res.status(200).json({
+    status: true,
+    message: 'Admission confirmed and user created successfully',
+    data: user,
+  });
+});
 
-    // Create new student
-    const newStudent = new users({
-      username: name,
+
+
+// Other existing functions...
+
+// @desc    Confirm teacher registration and create user
+// @route   POST /api/teachers/:id/confirm
+// @access  Admin
+export const registerTeacher = asyncHandler(async (req, res) => {
+  const teacher = await Teacher.findById(req.params.id);
+
+  if (!teacher) {
+    res.status(404);
+    throw new Error('Teacher not found');
+  }
+
+  // Check if required fields exist
+  const { name, email, mobileNo } = teacher;
+  if (!name || !email || !mobileNo) {
+    res.status(400);
+    throw new Error('All fields are required');
+  }
+
+  // Generate a password
+  const password = Math.random().toString(36).slice(-8); // Simple random password
+
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    res.status(400);
+    throw new Error('User with this email already exists');
+  }
+
+  // Create the user in the User collection
+  const user = await User.create({
+    name,
+    email,
+    mobileNo,
+    password: bcrypt.hashSync(password, 10), // Hash the password
+    isTeacher: true,
+  });
+
+  // Send email with login details
+  const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: email,
+    subject: 'Teacher Registration Confirmation',
+    text: `Dear ${name},\n\nCongratulations! You have been registered as a teacher. Your login details are:\nEmail: ${email}\nPassword: ${password}\n\nBest Regards,\nYour Institution`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    }
+  });
+
+  res.status(200).json({
+    status: true,
+    message: 'Teacher confirmed and user created successfully',
+    data: user,
+  });
+});
+
+
+// @desc    Register a new admin
+// @route   POST /api/admins/register
+// @access  Public
+export const registerAdmin = asyncHandler(async (req, res) => {
+  
+  const { name, email, mobileNo, password } = req.body; // Receive password
+
+  // Check for required fields
+  if (!name || !email || !mobileNo || !password) { // Check for password
+      res.status(400);
+      throw new Error('All fields are required');
+  }
+
+  // Check if admin already exists
+  const existingAdmin = await User.findOne({ email });
+  if (existingAdmin) {
+      res.status(400);
+      throw new Error('Admin with this email already exists');
+  }
+
+  // Create the admin in the Admin collection
+  const admin = await User.create({
+      name,
       email,
       mobileNo,
-      password: hashedPassword,
-      status: "confirmed", // Set status to confirmed
-    });
+      password: bcrypt.hashSync(password, 10), // Hash the password
+      role: 'admin' // Add the role field
+  });
 
-    await newStudent.save();
+  // Send email with login details
+  const transporter = nodemailer.createTransport({
+      service: 'Gmail',
+      auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+      },
+  });
 
-    // Send response with the new mobile number and password
-    res.status(201).json({
-      message: "Student registered successfully",
-      mobileNo,
-      password,  // Send the plain password to the admin (secure this in a real app)
-    });
-  } catch (error) {
-    console.error("Error registering student:", error);
-    res.status(500).json({ message: "Server error", error });
+  const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Admin Registration Confirmation',
+      text: `Dear ${name},\n\nCongratulations! You have been registered as an admin. Your login details are:\nEmail: ${email}\nPassword: ${password}\n\nBest Regards,\nYour Institution`,
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+          console.error('Error sending email:', error);
+      }
+  });
+
+  res.status(201).json({
+      status: true,
+      message: 'Admin registered successfully',
+      data: admin,
+  });
+});
+
+
+
+
+// @desc    Login User (Student/Teacher/Admin)
+// @route   POST /api/auth/login
+// @access  Public
+export const loginUser = asyncHandler(async (req, res) => {
+  const { emailOrMobile, password } = req.body;
+
+  // Check if both fields are provided
+  if (!emailOrMobile || !password) {
+    res.status(400);
+    throw new Error('Email/Mobile number and password are required');
   }
-};
 
-// Login Controller for Student (using email or mobile number)
- const loginController = async (req, res) => {
-  try {
-    const { identifier, password } = req.body;  // "identifier" can be email or mobile number
+  // Find user by email or mobile number
+  const user = await User.findOne({
+    $or: [{ email: emailOrMobile }, { mobileNumber: emailOrMobile }],
+  });
 
-    // Check if both identifier and password are provided
-    if (!identifier || !password) {
-      return res.status(400).json({ message: "Email/Mobile number and password are required", success: false });
-    }
+  // Check if user exists and passwords match
+  if (user && (await bcrypt.compare(password, user.password))) {
+    // Generate access and refresh tokens
+    const accessToken = jwt.sign(
+      { userId: user._id, role: user.role }, // You can add role to the payload (admin, teacher, student)
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES } // e.g., '10h'
+    );
 
-    let student;
+    const refreshToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_REFRESH_TOKEN_EXPIRES } // e.g., '30d'
+    );
 
-    // Check if the identifier is a valid email
-    const isEmail = /^\S+@\S+\.\S+$/.test(identifier);
-
-    if (isEmail) {
-      // Find student by email
-      student = await users.findOne({ email: identifier });
-    } else {
-      // Find student by mobile number
-      student = await users.findOne({ mobileNo: identifier });
-    }
-
-    // If student is not found
-    if (!student) {
-      return res.status(404).json({ message: "Student not found", success: false });
-    }
-
-    // Compare the provided password with the stored hashed password
-    const isMatch = await bcrypt.compare(password, student.password);
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email/mobile number or password", success: false });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign({ id: student._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-    // Respond with the token and user data
+    // Return the tokens and user info
     res.status(200).json({
-      message: "Login successful",
-      success: true,
-      token,
+      status: true,
+      message: 'Login successful',
+      accessToken,
+      refreshToken,
       data: {
-        id: student._id,
-        username: student.username,
-        email: student.email,
-        mobileNo: student.mobileNo,
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        mobileNumber: user.mobileNumber,
+        role: user.role, // role: 'student', 'teacher', 'admin'
       },
     });
-  } catch (error) {
-    console.error("Error during login:", error);
-    res.status(500).json({ message: "Server error", success: false });
+  } else {
+    res.status(401);
+    throw new Error('Invalid credentials');
   }
-};
+});
 
+// @desc    Refresh access token
+// @route   POST /api/auth/refresh
+// @access  Public
+export const refreshToken = asyncHandler(async (req, res) => {
+  const { token } = req.body;
 
-// const loginController = async (req, res) => {
-//   try {
-//     const { email, password } = req.body;
+  // Validate the refresh token
+  if (!token) {
+    res.status(400);
+    throw new Error('Refresh token is required');
+  }
 
-//     if (!email || !password) {
-//       return res.status(400).send({ message: "Email and password are required", success: false });
-//     }
-
-//     const user = await users.findOne({ email });
-//     if (!user) {
-//       return res.status(404).send({ message: "User not found", success: false });
-//     }
-
-//     const isMatch = await bcrypt.compare(password, user.password);
-//     if (!isMatch) {
-//       return res.status(401).send({ message: "Invalid email or password", success: false });
-//     }
-
-//     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, );
-//     res.status(200).send({ message: "Login successful", success: true, token, data: user });
-//   } catch (error) {
-//     console.error("Login Error:", error);
-//     res.status(500).send({ message: `Error in Login: ${error.message}` });
-//   }
-// };
-
-// Register Controller
-// const registerController = async (req, res) => {
-//   try {
-//     const { username, email, password } = req.body;
-
-   
-//     if (!username || !email || !password) {
-//       return res.status(400).send({ message: "All fields are required", success: false });
-//     }
-
-   
-//     const existingUser = await users.findOne({ email });
-//     if (existingUser) {
-//       return res.status(409).send({ message: "User already exists", success: false });
-//     }
-
-    
-//     const passwordValidation = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-//     if (!passwordValidation.test(password)) {
-//       return res.status(400).send({
-//         message: "Password must contain at least 8 characters, one letter, one number, and one special character.",
-//         success: false,
-//       });
-//     }
-
-
-//     const salt = await bcrypt.genSalt(10);
-//     const hashedPassword = await bcrypt.hash(password, salt);
-
-  
-//     const newUser = new users({ username, email, password: hashedPassword });
-//     await newUser.save();
-
-//     res.status(201).send({ message: "Registered successfully", success: true });
-//   } catch (error) {
-//     console.error("Registration Error:", error);
-//     res.status(500).send({ success: false, message: `Registration Error: ${error.message}` });
-//   }
-// };
-
-
-const authController = async (req, res) => {
   try {
-    const user = await users.findById(req.body.userId);
-    if (!user) {
-      return res.status(404).send({ message: "User not found", success: false });
-    }
+    // Verify the refresh token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
 
-    user.password = undefined; 
-    res.status(200).send({ success: true, data: user });
+    // Generate a new access token
+    const newAccessToken = jwt.sign(
+      { userId: userId },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES }
+    );
+
+    res.status(200).json({
+      status: true,
+      accessToken: newAccessToken,
+    });
   } catch (error) {
-    console.error("Auth Error:", error);
-    res.status(500).send({ message: "Auth error", success: false, error });
+    res.status(401);
+    throw new Error('Invalid refresh token');
   }
-};
+});
 
-export {
-  loginController,
-  registerStudent,
-  authController,
-};

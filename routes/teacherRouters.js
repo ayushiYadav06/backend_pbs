@@ -1,16 +1,18 @@
 
 import express from 'express';
-import { registerTeacher, getAllTeachers, updateTeacher } from '../controllers/teacherControllers.js';
+import {
+  registerTeacher,
+  getTeachers,
+  getTeacherById,
+  updateTeacher,
+  deleteTeacher
+} from '../controllers/teacherControllers.js';
+import { protect, admin } from '../middleware/authMiddleware.js'; // Import your authentication middleware
 
 const router = express.Router();
 
-
-router.post('/register', registerTeacher);
-
-
-router.get('/all', getAllTeachers);
-
-
-router.put('/update/:id', updateTeacher);
+// Protecting routes to only allow admin
+router.route('/').post(protect, admin, registerTeacher).get(protect, admin, getTeachers);
+router.route('/:id').get(protect, admin, getTeacherById).put(protect, admin, updateTeacher).delete(protect, admin, deleteTeacher);
 
 export default router;

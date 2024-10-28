@@ -1,8 +1,7 @@
-// routes/admissionRoutes.js
 import express from 'express';
 import {
-  createAdmission,
-  getAllAdmissions,
+  registerAdmission,
+  getAdmissions,
   getAdmissionById,
   updateAdmission,
   deleteAdmission
@@ -10,10 +9,19 @@ import {
 
 const router = express.Router();
 
-router.post('/', createAdmission);
-router.get('/', getAllAdmissions);
+// Register a new admission
+router.post('/', registerAdmission);
+
+// Get all admissions
+router.get('/', getAdmissions);
+
+// Get admission by ID
 router.get('/:id', getAdmissionById);
+
+// Update an admission
 router.put('/:id', updateAdmission);
+
+// Delete an admission
 router.delete('/:id', deleteAdmission);
 
 export default router;
