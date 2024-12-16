@@ -7,12 +7,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./connection/database.js";
 import userRoutes from "./routes/userRoutes.js";
-import notificationRoutes from "./routes/notificationRoutes.js";
-import teacherRoutes from "./routes/teacherRouters.js";
 import studentRoutes from "./routes/studentRoutes.js";
-import courseRoutes from "./routes/courseRoutes.js";
-import examRoutes from "./routes/examRoutes.js";
-import admissionRoutes from "./routes/addmissionRoutes.js";
+
 import errorHandler from "./middleware/errorHandlerMiddleware.js";
 
 const app = express(); 
@@ -30,14 +26,8 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
 
-app.use('/api/users', userRoutes); // Use the user routes under the '/api' prefix
-app.use('/api/teachers', teacherRoutes);
+app.use('/api/users', userRoutes); 
 app.use('/students', studentRoutes);
-app.use('/api/courses', courseRoutes);
-app.use('/exams', examRoutes);
-app.use('/api/admissions', admissionRoutes);
-
-app.use('/api/notifications', notificationRoutes);
 
 app.use(errorHandler);
 

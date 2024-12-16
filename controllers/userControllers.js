@@ -1,6 +1,4 @@
 import asyncHandler from 'express-async-handler';
-import Admission from '../models/AddmissionSchema.js';
-import Teacher from '../models/TeacherSchema.js';
 import User from '../models/UserSchema.js'; // Import the User model
 import bcrypt from 'bcryptjs'; // For password hashing
 import nodemailer from 'nodemailer';
@@ -75,7 +73,7 @@ export const confirmAdmission = asyncHandler(async (req, res) => {
 
 
 
-// Other existing functions...
+// Other existing functions...\
 
 // @desc    Confirm teacher registration and create user
 // @route   POST /api/teachers/:id/confirm
