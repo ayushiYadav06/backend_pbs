@@ -1,4 +1,3 @@
-
 import mongoose from 'mongoose';
 
 const studentSchema = new mongoose.Schema({
@@ -10,42 +9,24 @@ const studentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    motherName: {
-        type: String,
-        required: true
-    },
     email: {
         type: String,
-        required: true, unique: true
+        required: true,
+        unique: true
     },
     mobileNo: {
         type: String,
         required: true
     },
-    address: {
-        type: String,
-        required: true
-    },
-    cityVillage: {
-        type: String,
-        required: true
-    },
-    state: {
-        type: String,
-        required: true
-    },
-    country: {
-        type: String,
-        required: true
-    },
-    gender: {
-        type: String,
-        required: true
-    },
-    bloodGroup: { type: String },
     rollNo: {
         type: String,
-        required: true, unique: true
+        required: true,
+        unique: true
+    },
+    enrollmentNo: {
+        type: String,
+        required: true,
+        unique: true
     },
     courseTaken: {
         type: String,
@@ -59,7 +40,25 @@ const studentSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-});
+    section: {
+        type: String,
+        required: true
+    },
+    adharCardNo: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    status: {
+        type: String,
+        enum: ['Active', 'Inactive'],
+        required: true
+    },
+    document: {
+        type: String, 
+        required: true
+    },
+}, { timestamps: true });
 
 const Student = mongoose.model('Student', studentSchema);
 export default Student;
