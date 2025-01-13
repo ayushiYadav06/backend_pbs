@@ -37,12 +37,10 @@ const studentSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-      unique: true,
     },
     adharCardNo: {
       type: String,
       required: true,
-      unique: true,
     },
     abcId: {
       type: String,
@@ -55,7 +53,6 @@ const studentSchema = new mongoose.Schema(
     enrollmentNo: {
       type: String,
       required: true,
-      unique: true,
     },
     mjc01: {
       type: String,
