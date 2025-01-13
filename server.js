@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 import connectDB from "./connection/database.js";
 import userRoutes from "./routes/userRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
+import teacherRoutes from "./routes/teachersRoutes.js"
 
 import errorHandler from "./middleware/errorHandlerMiddleware.js";
 
@@ -28,6 +29,7 @@ app.use(morgan("dev"));
 
 app.use('/api/users', userRoutes); 
 app.use('/students', studentRoutes);
+app.use('/api/teachers', teacherRoutes);
 
 app.use(errorHandler);
 

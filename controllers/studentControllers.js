@@ -3,42 +3,69 @@ import  Student  from '../models/StudentSchema.js';
 
 export const registerStudent = async (req, res) => {
     try {
-        // Check if the document file exists
+        // Check if the document and image files exist
         if (!req.file) {
-            return res.status(400).json({ message: 'Document is required' });
+            return res.status(400).json({ message: 'Document are required' });
         }
 
         // Extract fields from request body
         const {
+            timestamp,
+            session,
             name,
+            gender,
+            category,
             fatherName,
-            email,
+            motherName,
             mobileNo,
-            rollNo,
-            enrollmentNo,
-            courseTaken,
-            branchName,
-            admissionYear,
-            section,
+            email,
             adharCardNo,
-            status,
+            abcId,
+            bloodGroup,
+            enrollmentNo,
+            mjc01,
+            mic01,
+            mdc01,
+            sec01,
+            vac01,
+            aec01,
+            mjc02,
+            mic02,
+            mdc02,
+            sec02,
+            vac02,
+            aec02,
         } = req.body;
-
+      
+        console.log(req.body.document)
         // Create a new student object
         const newStudent = new Student({
+            timestamp: timestamp || Date.now(), // Use current timestamp if not provided
+            session,
             name,
+            gender,
+            category,
             fatherName,
-            email,
+            motherName,
             mobileNo,
-            rollNo,
-            enrollmentNo,
-            courseTaken,
-            branchName,
-            admissionYear,
-            section,
+            email,
             adharCardNo,
-            status,
-            document: req.file.path, // File path for document
+            abcId,
+            bloodGroup,
+            enrollmentNo,
+            mjc01,
+            mic01,
+            mdc01,
+            sec01,
+            vac01,
+            aec01,
+            mjc02,
+            mic02,
+            mdc02,
+            sec02,
+            vac02,
+            aec02,
+            document: req.file.path, // File path for the document
         });
 
         // Save the student in the database
